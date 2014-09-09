@@ -1,0 +1,17 @@
+#!/bin/bash
+
+Xvfb :1 -extension GLX -screen 0 1024x780x24 &
+DISPLAY=:1 /usr/bin/openbox-session &
+
+# Wait a bit until the X server is ready
+sleep 1
+
+# Without using the -forever flag the container will stop
+# as soon as vncviewer disconnects
+#x11vnc -usepw -forever -display :1
+x11vnc -usepw -display :1
+
+# To make sure we can restart this container properly
+# Fatal server error: Server is already active for display 1
+# If this server is no longer running, remove /tmp/.X1-lock
+rm /tmp/.X1-lock

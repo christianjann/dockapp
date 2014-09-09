@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+    then
+    docker start dockapp
+    sleep 2
+    vncviewer -PasswordFile=$HOME/.docker/vnc/passwd $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' dockapp):5900
+fi
+
+case "$1" in
+    run)
+    # create the container and start it
+    docker run -d --name dockapp chris/ubuntu:14.04v1 /dockapp-start
+    ;;
+    start)
+    # start a stopped container
+    docker start dockapp
+    ;;
+    stop)
+    # stop a container
+    docker stop dockapp
+    ;;
+    pause)
+    # pause a container
+    docker pause dockapp
+    ;;
+    unpause)
+    # unpause a paused container
+    docker unpause dockapp
+    ;;
+    view)
+    # run vncviewer
+    vncviewer -PasswordFile=$HOME/.docker/vnc/passwd $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' dockapp):5900
+    ;;
+    *)
+        #echo $help
+    ;;
+esac
