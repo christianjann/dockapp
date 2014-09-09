@@ -28,7 +28,7 @@ run() {
   shift $((OPTIND - 1))
   #printf "Leftover args: '%s'" "$@"
   #echo $additional_args
-  docker run -d --name $name -v $share:/share:rw $image /share/dockapp-start $additional_args
+  docker run -d --name $name -v $share:/share:rw $image /dockapp-start $additional_args
 }
 
 view() {
