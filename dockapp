@@ -1,38 +1,106 @@
 #!/bin/bash
 
-if [ -z "$1" ]
-    then
-    docker start dockapp
+# Initialize variables
+name="dockapp"
+image="chris/ubuntu:14.04v1"
+vnc_passwd_file="$HOME/.docker/vnc/passwd"
+share="$HOME/share/docker"
+
+additional_args=""
+
+run() {
+  echo "dockapp: creating the container and starting it"
+  shift $((OPTIND - 1))
+  while getopts "r:a:x:f" OPTION "$@"; do
+    printf " -%s '%s'\n" $OPTION $OPTARG
+    case "$OPTION" in
+    r)  additional_args+="-$OPTION $OPTARG "
+        ;;
+    a)  additional_args+="-$OPTION $OPTARG "
+        ;;
+    x)  additional_args+="-$OPTION $OPTARG "
+        ;;
+    f)  additional_args+="-f "
+        ;;
+    esac
+
+  done
+  shift $((OPTIND - 1))
+  #printf "Leftover args: '%s'" "$@"
+  #echo $additional_args
+  docker run -d --name $name -v $share:/share:rw $image /share/dockapp-start $additional_args
+}
+
+view() {
+  echo "dockapp: running vncviewer"
+  vncviewer -PasswordFile=$vnc_passwd_file $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $name):5900
+}
+
+start() {
+  echo "dockapp: starting a stopped container"
+  docker start $name
+}
+
+stop() {
+  echo "dockapp: stoping a container"
+  docker stop $name
+}
+
+pause() {
+  echo "dockapp: pause a container"
+  #docker pause $name
+}
+
+unpause() {
+  echo "dockapp: unpause a paused container"
+  #docker unpause $name
+}
+
+ps() {
+  echo "dockapp: active dockapp containers:"
+  docker ps -a |grep $name
+}
+
+default() {
+    start
     sleep 2
-    vncviewer -PasswordFile=$HOME/.docker/vnc/passwd $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' dockapp):5900
+    view
+}
+
+help() {
+
+echo "
+SYNOPSIS
+   dockapp COMMAND [arg...]
+COMMANDS
+    run
+        -r,
+        -a,
+
+    view
+    start
+    stop
+    pause
+    unpause
+    help
+"
+
+echo "dockapp [run|view|start|stop|pause|unpause|help] [arg...]"
+echo "dockapp run -r 1280x1024x24 -a firefox -x top"
+
+}
+
+
+if [ -z "$1" ]
+then
+  echo "No arguments given, using defaults."
+  default
+elif [[ $1 =~ ^(run|view|start|stop|pause|unpause|ps|help)$ ]]; then
+  "$@"
+else
+  echo "Invalid argument $1" >&2
+  help
+  exit 1
 fi
 
-case "$1" in
-    run)
-    # create the container and start it
-    docker run -d --name dockapp chris/ubuntu:14.04v1 /dockapp-start
-    ;;
-    start)
-    # start a stopped container
-    docker start dockapp
-    ;;
-    stop)
-    # stop a container
-    docker stop dockapp
-    ;;
-    pause)
-    # pause a container
-    docker pause dockapp
-    ;;
-    unpause)
-    # unpause a paused container
-    docker unpause dockapp
-    ;;
-    view)
-    # run vncviewer
-    vncviewer -PasswordFile=$HOME/.docker/vnc/passwd $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' dockapp):5900
-    ;;
-    *)
-        #echo $help
-    ;;
-esac
+
