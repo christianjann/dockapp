@@ -2,38 +2,50 @@
 
 # Initialize variables
 name="dockapp"
-image="chris/ubuntu:14.04v1"
+image="jann/ubuntu:14.04v2"
 vnc_passwd_file="$HOME/.docker/vnc/passwd"
 share="$HOME/share/docker"
+network=1
+socket="$HOME/share/docker/x11vnc-socket"
 
-additional_args=""
+start_args=""
+docker_args=""
 
 run() {
   echo "dockapp: creating the container and starting it"
   shift $((OPTIND - 1))
-  while getopts "r:a:x:f" OPTION "$@"; do
+  while getopts "r:a:x:fu" OPTION "$@"; do
     printf " -%s '%s'\n" $OPTION $OPTARG
     case "$OPTION" in
-    r)  additional_args+="-$OPTION $OPTARG "
+    r)  start_args+="-$OPTION $OPTARG "
         ;;
-    a)  additional_args+="-$OPTION $OPTARG "
+    a)  start_args+="-$OPTION $OPTARG "
         ;;
-    x)  additional_args+="-$OPTION $OPTARG "
+    x)  start_args+="-$OPTION $OPTARG "
         ;;
-    f)  additional_args+="-f "
+    f)  start_args+="-f "
+        ;;
+    u)  start_args+="-u "
+        docker_args+="--net=none "
         ;;
     esac
 
   done
   shift $((OPTIND - 1))
   #printf "Leftover args: '%s'" "$@"
-  #echo $additional_args
-  docker run -d --name $name -v $share:/share:rw $image /dockapp-start $additional_args
+
+  docker run -d --name $name -v $share:/share:rw $docker_args $image /dockapp-start $start_args
 }
 
 view() {
   echo "dockapp: running vncviewer"
-  vncviewer -PasswordFile=$vnc_passwd_file $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $name):5900
+  if [ -S "$socket" ] #see man test
+  then
+        ssvnc-viewer "$socket"
+  else
+        vncviewer -PasswordFile=$vnc_passwd_file $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $name):5900
+  fi
+
 }
 
 start() {
@@ -63,7 +75,7 @@ ps() {
 
 default() {
     start
-    sleep 2
+    sleep 3
     view
 }
 

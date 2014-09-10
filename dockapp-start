@@ -5,8 +5,9 @@ resolution="1024x780x24"
 xterm_cmd="/bin/bash"
 additional_cmd="ls"
 x11vnc_args=""
+unixsockonly=0
 
-while getopts "h?r:a:x:f" opt; do
+while getopts "h?r:a:x:fu" opt; do
     printf " -%s '%s'\n" $OPTION $OPTARG
     case "$opt" in
     h|\?)
@@ -21,12 +22,12 @@ while getopts "h?r:a:x:f" opt; do
         ;;
     f)  x11vnc_args+="-forever "
         ;;
+    u)  unixsockonly=1
+        ;;
     esac
 done
 
 shift $((OPTIND-1))
-
-[ "$1" = "--" ] && shift
 
 help() {
   echo "./dockapp-start [arg...]"
@@ -58,8 +59,14 @@ xterm -e "$xterm_cmd; bash" &
 # Without using the -forever flag the container will stop
 # as soon as vncviewer disconnects
 #x11vnc -usepw -display :1 -forever
-x11vnc -usepw -display :1 $x11vnc_args
 
+if [ $unixsockonly -eq 0 ]; then
+    x11vnc -usepw -display :1 $x11vnc_args
+else
+    # switch to user app so that the socket gets created
+    # with the correct user:group on the host
+    su app -c"/x11vnc-0.9.13/x11vnc/x11vnc -unixsockonly /share/x11vnc-socket -display :1 $x11vnc_args"
+fi
 
 # To make sure we can restart this container properly
 # Fatal server error: Server is already active for display 1
