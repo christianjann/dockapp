@@ -2,8 +2,7 @@
 
 # Initialize variables
 resolution="1024x780x24"
-xterm_cmd="/bin/bash"
-additional_cmd="ls"
+additional_cmd="ls -l"
 x11vnc_args=""
 unixsockonly=0
 
@@ -17,8 +16,6 @@ while getopts "h?r:a:x:fu" opt; do
     r)  resolution=$OPTARG
         ;;
     a)  additional_cmd=$OPTARG
-        ;;
-    x)  xterm_cmd=$OPTARG
         ;;
     f)  x11vnc_args+="-forever "
         ;;
@@ -52,9 +49,8 @@ sleep 1
 # Launch an additional command in the background
 $additional_cmd &
 
-# Launch an xterm with xterm_cmd
-xterm -e "$xterm_cmd; bash" &
-#xterm -hold -e "$xterm_cmd" &
+# Launch an xterm
+xterm &
 
 # Without using the -forever flag the container will stop
 # as soon as vncviewer disconnects

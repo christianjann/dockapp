@@ -22,8 +22,6 @@ run() {
         ;;
     a)  start_args+="-$OPTION $OPTARG "
         ;;
-    x)  start_args+="-$OPTION $OPTARG "
-        ;;
     f)  start_args+="-f "
         ;;
     u)  start_args+="-u "
