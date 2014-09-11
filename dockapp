@@ -33,6 +33,11 @@ run() {
   shift $((OPTIND - 1))
   #printf "Leftover args: '%s'" "$@"
 
+  # delete old sockets
+  if [ -S "$socket" ]; then
+    rm "$socket"
+  fi
+
   docker run -d --name $name -h $hostname -v $share:/share:rw $docker_args $image /dockapp-start $start_args
 }
 
