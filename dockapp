@@ -7,6 +7,7 @@ vnc_passwd_file="$HOME/.docker/vnc/passwd"
 share="$HOME/share/docker"
 network=1
 socket="$HOME/share/docker/x11vnc-socket"
+hostname="docker"
 
 start_args=""
 docker_args=""
@@ -34,7 +35,7 @@ run() {
   shift $((OPTIND - 1))
   #printf "Leftover args: '%s'" "$@"
 
-  docker run -d --name $name -v $share:/share:rw $docker_args $image /dockapp-start $start_args
+  docker run -d --name $name -h $hostname -v $share:/share:rw $docker_args $image /dockapp-start $start_args
 }
 
 view() {
@@ -74,16 +75,22 @@ ps() {
 }
 
 default() {
+  if ! docker inspect $name &> /dev/null; then
+    echo "dockapp: container $name not running, starting it"
+    dockapp run -u -r 1280x1000x24
+  else
     start
-    sleep 3
-    view
+  fi
+
+  sleep 3
+  view
 }
 
 help() {
 
 echo "
 SYNOPSIS
-   dockapp COMMAND [arg...]
+   dockapp [COMMAND] [arg...]
 COMMANDS
     run
         -r,
@@ -99,6 +106,8 @@ COMMANDS
 
 echo "dockapp [run|view|start|stop|pause|unpause|help] [arg...]"
 echo "dockapp run -r 1280x1024x24 -a firefox -x top"
+echo "dockapp run -u -r 1280x1000x24"
+echo "dockapp"
 
 }
 
